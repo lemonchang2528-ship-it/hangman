@@ -197,7 +197,7 @@
     <header class="hero">
       <div>
         <div class="badge">✨ Cute Word Rescue Game</div>
-        <h1>Hangman แบบน่ารัก</h1>
+        <h1>Cute Hangman</h1>
         <div class="subtitle">เดาคำศัพท์ ช่วยน้องบัดดี้รักษาพลังงานให้เหลือรอด!</div>
       </div>
       <div class="controls">
@@ -231,7 +231,7 @@
             <div class="controls">
               <select id="setSelect">
                 <option value="th_easy">ไทย: คำง่าย</option>
-                <option value="en_easy">English: Easy Words</option>
+                <option value="en_easy">English: UNIT 1. The Scientific Process</option>
                 <option value="pea_energy">Energy Theme</option>
               </select>
               <button id="customToggle">➕ ใช้คำศัพท์เอง</button>
@@ -268,6 +268,23 @@
 
 <script>
 const WORD_SETS = {
+    en_easy: {
+    label: "English: Easy Words",
+    language: "en",
+    words: [
+      { word: "question", hint: "คำถาม" },
+      { word: "hypothesis", hint: "สมมติฐาน" },
+      { word: "information", hint: "ข้อมูล" },
+      { word: "scientific methods", hint: "วิธีการทางวิทยาศาสตร์" },
+      { word: "scientific knowledge", hint: "ความรู้ทางวิทยาศาสตร์" },
+      { word: "gather", hint: "รวบรวม" }
+      { word: "conclusion", hint: "การสรุป" }
+      { word: "guess the answer", hint: "เดาคำตอบ" }
+      { word: "experiment", hint: "การทดลอง" }
+      { word: "explore", hint: "สำรวจ" }
+    ]
+  },
+  
   th_easy: {
     label: "ไทย: คำง่าย",
     language: "th",
@@ -280,18 +297,7 @@ const WORD_SETS = {
       { word: "ขนม", hint: "ของกินรสหวาน" }
     ]
   },
-  en_easy: {
-    label: "English: Easy Words",
-    language: "en",
-    words: [
-      { word: "CAT", hint: "A cute animal that says meow" },
-      { word: "RAINBOW", hint: "Colorful arc after rain" },
-      { word: "SCHOOL", hint: "A place for learning" },
-      { word: "FLOWER", hint: "A colorful plant" },
-      { word: "COOKIE", hint: "A sweet snack" },
-      { word: "ROBOT", hint: "A machine friend" }
-    ]
-  },
+
   pea_energy: {
     label: "Energy Theme",
     language: "en",
