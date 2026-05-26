@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cute Hangman Game</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      min-height: 100vh;
+      color: #2f2440;
+      background:
+        radial-gradient(circle at top left, #ffe4f1, transparent 30%),
+        radial-gradient(circle at top right, #fff0b8, transparent 30%),
+        linear-gradient(135deg, #f8d7ff, #e5ddff 45%, #fff0c8);
+    }
+    .container { max-width: 1120px; margin: auto; padding: 18px; }
+    .hero, .card {
+      background: rgba(255,255,255,.76);
+      border-radius: 28px;
+      box-shadow: 0 14px 35px rgba(93, 56, 148, .18);
+      backdrop-filter: blur(10px);
+    }
+    .hero {
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    h1 { margin: 0; font-size: clamp(30px, 5vw, 48px); color: #67328f; }
+    .subtitle { color: #6f6580; margin-top: 6px; }
+    .badge { color: #7c3fb5; font-weight: 800; margin-bottom: 6px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, select {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 15px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button {
+      background: #fff;
+      color: #67328f;
+      box-shadow: 0 4px 12px rgba(80,45,120,.12);
+      transition: transform .08s, background .2s;
+    }
+    button:hover { background: #f2e7ff; }
+    button:active { transform: scale(.96); }
+    .primary { background: #733bb2; color: #fff; }
+    .primary:hover { background: #5e2f94; }
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+    .card { padding: 20px; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+    .stat {
+      background: #f7edff;
+      border-radius: 22px;
+      text-align: center;
+      padding: 16px;
+      font-weight: 800;
+    }
+    .stat small { display: block; color: #746985; margin-bottom: 5px; }
+    .stat strong { font-size: 30px; color: #67328f; }
+    .buddy-wrap { text-align: center; }
+    .buddy {
+      width: 150px;
+      height: 190px;
+      margin: 14px auto 0;
+      border: 5px solid #cda8ff;
+      border-radius: 34px;
+      background: linear-gradient(#fff, #f3e9ff);
+      position: relative;
+      box-shadow: 0 14px 28px rgba(80,45,120,.18);
+      animation: float 2s ease-in-out infinite;
+    }
+    .buddy.win { animation: jump .65s ease-in-out infinite; }
+    .buddy.lost { animation: shake .35s ease-in-out infinite; }
+    .antenna {
+      position: absolute; left: 50%; top: -22px; transform: translateX(-50%);
+      width: 68px; height: 20px; border-radius: 16px 16px 0 0; background: #b785ee;
+    }
+    .face {
+      position: absolute; left: 50%; top: 32px; transform: translateX(-50%);
+      width: 105px; height: 82px; border-radius: 26px;
+      border: 4px solid #dcc3ff; background: white;
+      display: flex; align-items: center; justify-content: center;
+      color: #67328f; font-size: 25px; font-weight: 900;
+    }
+    .arm { position: absolute; top: 92px; width: 42px; height: 22px; background: #cbb1ff; border-radius: 99px; }
+    .arm.left { left: -34px; }
+    .arm.right { right: -34px; }
+    .energy {
+      position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%);
+      display: flex; gap: 4px; align-items: flex-end;
+    }
+    .bar {
+      width: 12px; border-radius: 7px 7px 2px 2px;
+      background: linear-gradient(#ffe36d, #be99ff);
+      opacity: .22; height: 8px;
+    }
+    .bar.on { opacity: 1; }
+    .mood {
+      margin: 14px auto 0;
+      display: inline-block;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: white;
+      color: #67328f;
+      font-weight: 900;
+    }
+    .topline {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .wordbox {
+      text-align: center;
+      border-radius: 24px;
+      padding: 22px;
+      background: linear-gradient(90deg, #f3e8ff, #ffe7f2);
+    }
+    .hint { color: #67328f; font-weight: 900; margin-bottom: 16px; }
+    .letters {
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+      font-size: clamp(28px, 5vw, 46px); font-weight: 950;
+      color: #4b1676;
+      letter-spacing: 3px;
+    }
+    .slot {
+      min-width: 45px; height: 58px; padding: 4px 11px;
+      border-radius: 14px; background: white;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 5px 12px rgba(80,45,120,.1);
+    }
+    .message {
+      display: none;
+      text-align: center;
+      margin-top: 14px;
+      border-radius: 20px;
+      padding: 16px;
+      font-weight: 900;
+    }
+    .message.show { display: block; }
+    .message.win { background: #e5fff0; color: #157347; }
+    .message.lost { background: #ffe8f1; color: #b42357; }
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+    }
+    .key {
+      border-radius: 16px;
+      padding: 13px 4px;
+      font-size: 19px;
+      background: white;
+    }
+    .key.used.correct { background: #dffbea; color: #157347; }
+    .key.used.wrong { background: #ffe2ee; color: #b42357; }
+    .key:disabled { cursor: not-allowed; opacity: .8; }
+    textarea {
+      width: 100%; min-height: 100px; resize: vertical;
+      border: 2px solid #dfc8ff;
+      border-radius: 18px;
+      padding: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .custom-box {
+      display: none;
+      background: #f5eaff;
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .custom-box.show { display: block; }
+    .note { margin-top: 12px; font-size: 12px; color: #746985; }
+    @keyframes float { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
+    @keyframes jump { 0%,100%{ transform: translateY(0) rotate(-1deg);} 50%{ transform: translateY(-12px) rotate(1deg);} }
+    @keyframes shake { 0%,100%{ transform: translateX(0);} 25%{ transform: translateX(-4px);} 75%{ transform: translateX(4px);} }
+    @media (max-width: 850px) {
+      .hero { flex-direction: column; align-items: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .keyboard { grid-template-columns: repeat(7, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div>
+        <div class="badge">✨ Cute Word Rescue Game</div>
+        <h1>Hangman แบบน่ารัก</h1>
+        <div class="subtitle">เดาคำศัพท์ ช่วยน้องบัดดี้รักษาพลังงานให้เหลือรอด!</div>
+      </div>
+      <div class="controls">
+        <button id="sfxBtn">🔊 SFX</button>
+        <button id="musicBtn">🔇 Music</button>
+        <button id="resetBtn" class="primary">🔄 เริ่มใหม่</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="stats">
+          <div class="stat"><small>Score</small><strong id="score">0</strong></div>
+          <div class="stat"><small>Wrong</small><strong id="wrong">0/6</strong></div>
+        </div>
+        <div class="buddy-wrap">
+          <div id="buddy" class="buddy">
+            <div class="antenna"></div>
+            <div id="face" class="face">•‿•</div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div id="energy" class="energy"></div>
+          </div>
+          <div id="mood" class="mood">พลังเหลือ 6/6</div>
+        </div>
+      </section>
+
+      <main>
+        <section class="card" style="margin-bottom:18px;">
+          <div class="topline">
+            <div class="controls">
+              <select id="setSelect">
+                <option value="th_easy">ไทย: คำง่าย</option>
+                <option value="en_easy">English: Easy Words</option>
+                <option value="pea_energy">Energy Theme</option>
+              </select>
+              <button id="customToggle">➕ ใช้คำศัพท์เอง</button>
+            </div>
+            <strong id="round">Round 1</strong>
+          </div>
+
+          <div id="customBox" class="custom-box">
+            <strong>เพิ่มคำศัพท์เอง รูปแบบ: คำ:คำใบ้ — 1 บรรทัดต่อ 1 คำ</strong>
+            <textarea id="customWords">ดาว:อยู่บนท้องฟ้า
+หนังสือ:ใช้สำหรับอ่าน
+ไฟฟ้า:พลังงานที่ใช้เปิดไฟ</textarea>
+            <div style="margin-top:10px;">
+              <button id="applyCustom" class="primary">สุ่มจากชุดคำนี้</button>
+            </div>
+          </div>
+
+          <div class="wordbox">
+            <div id="hint" class="hint"></div>
+            <div id="word" class="letters"></div>
+          </div>
+
+          <div id="message" class="message"></div>
+        </section>
+
+        <section class="card">
+          <strong style="color:#67328f;">เลือกตัวอักษร</strong>
+          <div id="keyboard" class="keyboard" style="margin-top:12px;"></div>
+          <div class="note">หมายเหตุ: เวอร์ชันนี้รองรับคำไทย/อังกฤษแบบไม่เว้นวรรค เหมาะสำหรับคำศัพท์สั้นถึงกลาง</div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+<script>
+const WORD_SETS = {
+  th_easy: {
+    label: "ไทย: คำง่าย",
+    language: "th",
+    words: [
+      { word: "แมว", hint: "สัตว์เลี้ยงร้องเหมียว" },
+      { word: "ทะเล", hint: "มีน้ำเค็มและคลื่น" },
+      { word: "ดอกไม้", hint: "มีกลิ่นหอมและสีสวย" },
+      { word: "โรงเรียน", hint: "สถานที่เรียนหนังสือ" },
+      { word: "สายรุ้ง", hint: "เกิดหลังฝนตกและมีหลายสี" },
+      { word: "ขนม", hint: "ของกินรสหวาน" }
+    ]
+  },
+  en_easy: {
+    label: "English: Easy Words",
+    language: "en",
+    words: [
+      { word: "CAT", hint: "A cute animal that says meow" },
+      { word: "RAINBOW", hint: "Colorful arc after rain" },
+      { word: "SCHOOL", hint: "A place for learning" },
+      { word: "FLOWER", hint: "A colorful plant" },
+      { word: "COOKIE", hint: "A sweet snack" },
+      { word: "ROBOT", hint: "A machine friend" }
+    ]
+  },
+  pea_energy: {
+    label: "Energy Theme",
+    language: "en",
+    words: [
+      { word: "POWER", hint: "Energy that makes things work" },
+      { word: "VOLTAGE", hint: "Electrical pressure" },
+      { word: "SMARTGRID", hint: "Modern electricity network" },
+      { word: "METER", hint: "Device that measures electricity use" },
+      { word: "SOLAR", hint: "Energy from the sun" },
+      { word: "BATTERY", hint: "Stores energy" }
+    ]
+  }
+};
+
+const TH_KEYS = "กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรลวศษสหฬอฮเแโใไะาิีึืุู".split("");
+const EN_KEYS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const MAX_WRONG = 6;
+
+let state = {
+  setKey: "th_easy",
+  useCustom: false,
+  current: null,
+  guessed: [],
+  score: 0,
+  round: 1,
+  sfx: true,
+  music: false,
+  audioCtx: null,
+  musicTimer: null
+};
+
+const el = id => document.getElementById(id);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const normalize = word => word.replace(/\s+/g, "").toUpperCase();
+
+function getActiveSet() {
+  if (!state.useCustom) return WORD_SETS[state.setKey];
+  const raw = el("customWords").value.split("\n").map(x => x.trim()).filter(Boolean);
+  const words = raw.map(line => {
+    const parts = line.split(":");
+    return { word: (parts[0] || "").trim(), hint: (parts.slice(1).join(":") || "ไม่มีคำใบ้").trim() };
+  }).filter(x => x.word);
+  return {
+    label: "Custom Set",
+    language: /[A-Za-z]/.test(words[0]?.word || "") ? "en" : "th",
+    words: words.length ? words : WORD_SETS.th_easy.words
+  };
+}
+
+function playTone(type) {
+  if (!state.sfx) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    state.audioCtx = state.audioCtx || new AudioContext();
+    const ctx = state.audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const settings = {
+      correct: { freq: 660, end: .12, gain: .06, type: "sine" },
+      wrong: { freq: 180, end: .16, gain: .07, type: "square" },
+      win: { freq: 880, end: .35, gain: .07, type: "triangle" },
+      lose: { freq: 120, end: .45, gain: .07, type: "sawtooth" }
+    }[type];
+    osc.type = settings.type;
+    osc.frequency.setValueAtTime(settings.freq, ctx.currentTime);
+    if (type === "win") osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + settings.end);
+    if (type === "lose") osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + settings.end);
+    gain.gain.setValueAtTime(settings.gain, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + settings.end);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + settings.end);
+  } catch(e) {}
+}
+
+function toggleMusic() {
+  state.music = !state.music;
+  el("musicBtn").textContent = state.music ? "🔊 Music" : "🔇 Music";
+  if (!state.music) {
+    clearTimeout(state.musicTimer);
+    return;
+  }
+  const notes = [261.63, 329.63, 392, 523.25, 392, 329.63];
+  let i = 0;
+  function loop() {
+    if (!state.music) return;
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      state.audioCtx = state.audioCtx || new AudioContext();
+      const ctx = state.audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = notes[i++ % notes.length];
+      gain.gain.value = .025;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + .22);
+    } catch(e) {}
+    state.musicTimer = setTimeout(loop, 520);
+  }
+  loop();
+}
+
+function newRound(increment = true) {
+  const set = getActiveSet();
+  state.current = pick(set.words);
+  state.guessed = [];
+  if (increment) state.round++;
+  render();
+}
+
+function resetGame() {
+  state.score = 0;
+  state.round = 1;
+  state.guessed = [];
+  state.current = pick(getActiveSet().words);
+  render();
+}
+
+function guess(letter) {
+  const answer = normalize(state.current.word);
+  const wrongCount = state.guessed.filter(l => !answer.includes(l)).length;
+  const won = answer.split("").every(ch => state.guessed.includes(ch));
+  const lost = wrongCount >= MAX_WRONG;
+  if (won || lost || state.guessed.includes(letter)) return;
+
+  state.guessed.push(letter);
+  playTone(answer.includes(letter) ? "correct" : "wrong");
+
+  const newWrongCount = state.guessed.filter(l => !answer.includes(l)).length;
+  const newWon = answer.split("").every(ch => state.guessed.includes(ch));
+  const newLost = newWrongCount >= MAX_WRONG;
+
+  if (newWon) {
+    state.score += Math.max(10, 60 - newWrongCount * 8);
+    setTimeout(() => playTone("win"), 120);
+  } else if (newLost) {
+    setTimeout(() => playTone("lose"), 120);
+  }
+  render();
+}
+
+function render() {
+  const set = getActiveSet();
+  const answer = normalize(state.current.word);
+  const wrongLetters = state.guessed.filter(l => !answer.includes(l));
+  const wrongCount = wrongLetters.length;
+  const won = answer.split("").every(ch => state.guessed.includes(ch));
+  const lost = wrongCount >= MAX_WRONG;
+  const battery = Math.max(0, MAX_WRONG - wrongCount);
+
+  el("score").textContent = state.score;
+  el("wrong").textContent = wrongCount + "/" + MAX_WRONG;
+  el("round").textContent = "Round " + state.round;
+  el("hint").textContent = "Hint: " + state.current.hint;
+
+  el("word").innerHTML = answer.split("").map(ch =>
+    `<span class="slot">${state.guessed.includes(ch) ? ch : "_"}</span>`
+  ).join("");
+
+  el("face").textContent = won ? "≧◡≦" : lost ? "T_T" : wrongCount >= 4 ? "•︵•" : "•‿•";
+  el("buddy").className = "buddy" + (won ? " win" : lost ? " lost" : "");
+  el("mood").textContent = won ? "พลังเต็ม!" : lost ? "หมดพลังแล้ว" : `พลังเหลือ ${battery}/${MAX_WRONG}`;
+
+  el("energy").innerHTML = Array.from({length: MAX_WRONG}).map((_, i) =>
+    `<div class="bar ${i < battery ? "on" : ""}" style="height:${i < battery ? 16 + i * 4 : 8}px"></div>`
+  ).join("");
+
+  const msg = el("message");
+  if (won || lost) {
+    msg.className = "message show " + (won ? "win" : "lost");
+    msg.innerHTML = won
+      ? `เยี่ยมมาก! ช่วยน้องบัดดี้สำเร็จ 🎉<br><button class="primary" onclick="newRound(true)" style="margin-top:10px;">เล่นคำถัดไป</button>`
+      : `ยังไม่สำเร็จ คำตอบคือ ${answer} 💡<br><button class="primary" onclick="newRound(true)" style="margin-top:10px;">เล่นคำถัดไป</button>`;
+  } else {
+    msg.className = "message";
+    msg.innerHTML = "";
+  }
+
+  const keys = set.language === "en" ? EN_KEYS : TH_KEYS;
+  el("keyboard").innerHTML = keys.map(letter => {
+    const used = state.guessed.includes(letter);
+    const correct = answer.includes(letter);
+    const cls = used ? (correct ? "used correct" : "used wrong") : "";
+    return `<button class="key ${cls}" ${used || won || lost ? "disabled" : ""} onclick="guess('${letter}')">${letter}</button>`;
+  }).join("");
+}
+
+el("sfxBtn").onclick = () => {
+  state.sfx = !state.sfx;
+  el("sfxBtn").textContent = state.sfx ? "🔊 SFX" : "🔇 SFX";
+};
+el("musicBtn").onclick = toggleMusic;
+el("resetBtn").onclick = resetGame;
+el("setSelect").onchange = e => {
+  state.setKey = e.target.value;
+  state.useCustom = false;
+  el("customBox").classList.remove("show");
+  el("customToggle").textContent = "➕ ใช้คำศัพท์เอง";
+  resetGame();
+};
+el("customToggle").onclick = () => {
+  state.useCustom = !state.useCustom;
+  el("customBox").classList.toggle("show", state.useCustom);
+  el("customToggle").textContent = state.useCustom ? "📚 ใช้ชุดตัวอย่าง" : "➕ ใช้คำศัพท์เอง";
+  resetGame();
+};
+el("applyCustom").onclick = resetGame;
+
+state.current = pick(getActiveSet().words);
+render();
+</script>
+</body>
+</html>
